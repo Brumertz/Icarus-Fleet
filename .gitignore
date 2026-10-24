@@ -1,0 +1,23 @@
+# Build output
+bin/
+obj/
+artifacts/
+
+# IDE / editor
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.csproj.user
+
+# Test results
+TestResults/
+*.trx
+coverage/
+
+# Misc
+*.log
+.DS_Store
+Thumbs.db
