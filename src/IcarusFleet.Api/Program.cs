@@ -4,6 +4,10 @@ using IcarusFleet.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Required by SwaggerGen to discover the minimal-API endpoints.
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 builder.Services.AddSingleton<ServiceQueueManager>();
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -11,6 +15,14 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 var app = builder.Build();
+
+// Interactive API docs at http://localhost:5000/ (disabled by default in production).
+app.UseSwagger();
+app.UseSwaggerUI(options =>
+{
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Icarus Fleet API v1");
+    options.RoutePrefix = string.Empty;
+});
 
 app.MapGet("/health", () =>
     Results.Ok(new { status = "ok", service = "icarus-fleet-api" }));
