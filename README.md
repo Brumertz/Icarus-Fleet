@@ -24,6 +24,8 @@ sequential tags from 100 and the 15% Express surcharge.
 ## Features
 
 - **Dual FIFO queues** — Regular and Express jobs processed independently
+- **Web dashboard** — Spanish-language form and live queue boards served at `/`, no HTTP client required
+- **Swagger UI** — interactive API docs at `/swagger`
 - **Atomic Express surcharge** — +15% applied at enqueue time, rounded to 2 decimals
 - **Sequential service tags** — 100, 110, 120… assigned automatically
 - **Finished list** — processed jobs keep their completion timestamp
@@ -54,6 +56,14 @@ flowchart LR
 | `POST` | `/api/services/{tag}/process` | Move a queued job to Finished |
 | `DELETE` | `/api/services/finished/{tag}` | Remove a finished job |
 
+### Web UI
+
+| URL | What it is |
+| :--- | :--- |
+| `/` | **Landing page**: form + live Regular / Express / Finished boards (the easiest way to enter data) |
+| `/swagger` | Swagger UI — interactive docs for every endpoint above |
+| `/dashboard` | Legacy alias, redirects to `/` |
+
 ### Examples
 
 ```bash
@@ -79,6 +89,11 @@ dotnet run --project src/IcarusFleet.Api
 
 The API listens on the URL printed in the console (e.g. `http://localhost:5000`).
 
+Then open:
+
+- `http://localhost:5000/` → dashboard: create and process jobs from the browser
+- `http://localhost:5000/swagger` → Swagger UI
+
 ## Tests
 
 ```bash
@@ -92,7 +107,7 @@ push and pull request.
 ## Roadmap
 
 - [ ] SignalR hub for real-time queue updates
-- [ ] React + TypeScript dashboard (the original plan of the desktop app)
+- [ ] React + TypeScript dashboard (the original plan of the desktop app; the vanilla JS board at `/` is the first step)
 - [ ] Persistence with EF Core + PostgreSQL
 - [ ] Docker / docker-compose
 - [ ] JWT authentication

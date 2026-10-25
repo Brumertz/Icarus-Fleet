@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- ============================================================
+       Section 0: head — Spanish UI copy, English code comments.
+       Static assets are served by the same API (UseDefaultFiles +
+       UseStaticFiles), so relative paths work on any port.
+       ============================================================ -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Makes styles.css / main.js resolve from the site root, where this page
+       is served as the app's landing view. -->
+  <base href="/">
+  <title>Icarus Fleet — Panel de servicios</title>
+  <meta name="description" content="Panel de control para la cola de servicios de drones: alta, proceso y seguimiento de trabajos.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- ============================================================
+       Section 1: header — brand, API health badge and manual refresh.
+       ============================================================ -->
+  <header class="topbar">
+    <div class="topbar__brand">
+      <span class="topbar__mark" aria-hidden="true">▲</span>
+      <div>
+        <h1>Icarus Fleet</h1>
+        <p class="topbar__subtitle">Panel de cola de servicios de drones</p>
+      </div>
+    </div>
+
+    <div class="topbar__actions">
+      <span class="status" id="api-status" data-state="checking" role="status">
+        <span class="status__dot" aria-hidden="true"></span>
+        <span id="api-status-text">Verificando API…</span>
+      </span>
+      <button type="button" class="btn btn--ghost" id="refresh-btn">Actualizar</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- ============================================================
+         Section 2: job form — POST /api/services.
+         Mirrors the server rules: required fields, cost >= 0,
+         Express surcharge previewed live before submitting.
+         ============================================================ -->
+    <section class="panel panel--form" aria-labelledby="form-title">
+      <div class="panel__head">
+        <h2 id="form-title">Nuevo servicio</h2>
+        <span class="tag-preview">Próxima etiqueta: <strong id="next-tag">—</strong></span>
+      </div>
+
+      <form id="service-form" novalidate>
+        <div class="field">
+          <label for="client-name">Cliente</label>
+          <input type="text" id="client-name" name="clientName" autocomplete="off"
+                 placeholder="ana torres" maxlength="80" required>
+        </div>
+
+        <div class="field">
+          <label for="drone-model">Modelo del dron</label>
+          <input type="text" id="drone-model" name="droneModel" autocomplete="off"
+                 placeholder="DJI Mavic 3" maxlength="80" required>
+        </div>
+
+        <div class="field">
+          <label for="problem">Problema</label>
+          <textarea id="problem" name="problem" rows="3"
+                    placeholder="broken propeller" maxlength="300" required></textarea>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="cost">Costo base (USD)</label>
+            <input type="text" inputmode="decimal" id="cost" name="cost"
+                   placeholder="100.00" autocomplete="off" required>
+          </div>
+
+          <fieldset class="field field--priority">
+            <legend>Prioridad</legend>
+            <label class="choice">
+              <input type="radio" name="priority" value="Regular" id="priority-regular" checked>
+              <span>Regular</span>
+            </label>
+            <label class="choice">
+              <input type="radio" name="priority" value="Express" id="priority-express">
+              <span>Express <em>+15%</em></span>
+            </label>
+          </fieldset>
+        </div>
+
+        <!-- Live cost preview: Express applies the 15% surcharge at enqueue time -->
+        <p class="preview" id="cost-preview">Costo final: <strong>0.00</strong></p>
+
+        <p class="alert" id="form-error" role="alert" hidden></p>
+
+        <button type="submit" class="btn btn--primary" id="submit-btn">
+          Agregar a la cola
+        </button>
+      </form>
+    </section>
+
+    <!-- ============================================================
+         Section 3: queues — Regular, Express and Finished lists.
+         Each row renders its own action button (process / delete).
+         ============================================================ -->
+    <section class="queues" aria-labelledby="queues-title">
+      <div class="queues__head">
+        <h2 id="queues-title">Colas de servicio</h2>
+        <p class="queues__meta" id="last-updated">Sin datos todavía</p>
+      </div>
+
+      <div class="queues__grid">
+        <article class="panel">
+          <header class="panel__head panel__head--queue">
+            <h3>Regular <span class="count" id="regular-count">0</span></h3>
+          </header>
+          <ul class="list" id="regular-list"></ul>
+          <p class="empty" id="empty-regular">Sin trabajos en espera.</p>
+        </article>
+
+        <article class="panel panel--express">
+          <header class="panel__head panel__head--queue">
+            <h3>Express <span class="count" id="express-count">0</span></h3>
+          </header>
+          <ul class="list" id="express-list"></ul>
+          <p class="empty" id="empty-express">Sin trabajos en espera.</p>
+        </article>
+
+        <article class="panel panel--finished">
+          <header class="panel__head panel__head--queue">
+            <h3>Terminados <span class="count" id="finished-count">0</span></h3>
+          </header>
+          <ul class="list" id="finished-list"></ul>
+          <p class="empty" id="empty-finished">Ningún servicio procesado todavía.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <!-- Transient feedback for process / delete operations -->
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <footer class="footer">
+    <p>Icarus Fleet API — <a href="/api/services" target="_blank" rel="noopener noreferrer">ver JSON crudo</a></p>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>

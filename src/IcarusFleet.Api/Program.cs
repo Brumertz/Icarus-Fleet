@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using IcarusFleet.Api.Models;
 using IcarusFleet.Api.Services;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,12 +17,43 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 var app = builder.Build();
 
-// Interactive API docs at http://localhost:5000/ (disabled by default in production).
+// The dashboard is the landing view: "/" serves it directly and the static
+// assets (styles.css, main.js) resolve from the same wwwroot.
+// Both UI routes are excluded from the OpenAPI description: they return HTML,
+// so listing them in Swagger would make "Execute" return markup instead of JSON.
+app.UseStaticFiles();
+
+// `dotnet run` and Visual Studio use the project folder as content root, but a
+// double-clicked .exe keeps the caller's working directory. When that happens
+// the project wwwroot is unreachable, so fall back to the copy shipped next to
+// the binaries (see the csproj CopyToOutputDirectory entry).
+var projectWwwroot = Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
+var binaryWwwroot = Path.Combine(AppContext.BaseDirectory, "wwwroot");
+if (Directory.Exists(binaryWwwroot) &&
+    !string.Equals(Path.GetFullPath(binaryWwwroot), Path.GetFullPath(projectWwwroot), StringComparison.OrdinalIgnoreCase))
+{
+    app.UseStaticFiles(new StaticFileOptions { FileProvider = new PhysicalFileProvider(binaryWwwroot) });
+}
+
+var dashboardPath = new[] { projectWwwroot, binaryWwwroot }
+    .Select(root => Path.Combine(root, "index.html"))
+    .FirstOrDefault(File.Exists);
+
+IResult ServeDashboard() => dashboardPath is not null && File.Exists(dashboardPath)
+    ? Results.File(dashboardPath, "text/html; charset=utf-8")
+    : Results.NotFound(new { error = "Dashboard not found." });
+
+app.MapGet("/", ServeDashboard).ExcludeFromDescription();
+
+// Keeps the previous dashboard URL working instead of dead-ending on a 404.
+app.MapGet("/dashboard", () => Results.Redirect("/")).ExcludeFromDescription();
+
+// Interactive API docs moved to /swagger so the dashboard owns the root URL.
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "Icarus Fleet API v1");
-    options.RoutePrefix = string.Empty;
+    options.RoutePrefix = "swagger";
 });
 
 app.MapGet("/health", () =>
