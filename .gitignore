@@ -16,6 +16,8 @@ artifacts/
 TestResults/
 *.trx
 coverage/
+TEST_REPORT.md
+test-report.md
 
 # Misc
 *.log

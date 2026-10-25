@@ -28,3 +28,10 @@ jobs:
 
       - name: Test
         run: dotnet test --configuration Release --no-build --verbosity normal
+
+      - name: Publish Test Summary
+        if: always()
+        run: |
+          if [ -f TEST_REPORT.md ]; then
+            cat TEST_REPORT.md >> $GITHUB_STEP_SUMMARY
+          fi
